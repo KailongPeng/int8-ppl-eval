@@ -1,0 +1,1171 @@
+
+ ▐▛███▜▌   Claude Code v2.1.63
+▝▜█████▛▘  Opus 4.6 · Claude Max
+  ▘▘ ▝▝    /home/p00929643/int8
+
+✻ Conversation compacted (ctrl+o for history)
+
+  ⎿  Read ../../shared/.claude/projects/-home-p00929643-int8/memory/ckpt/ckpt_002.md (143 lines)
+
+
+  ⎿  Read quantize_w8a8_cpu.py (35 lines)
+  ⎿  Read ../../shared/.claude/projects/-home-p00929643-int8/memory/ckpt/ckpt_001.md (123 lines)
+
+
+  ⎿  Read ../../shared/.claude/skills/int8-ppl-eval/references/ascend_guide.md (130 lines)
+
+  ⎿  Read ../../shared/.claude/skills/int8-ppl-eval/scripts/quantize.py (54 lines)
+
+
+● FP16 baseline on v1.0.0 已完成 (word_perplexity = 60.0255)，但脚本因 engine core dump 导致 set -e 退出，Step 2 和 Step 3 没有执行。现在分别运行剩余步骤。
+
+  先检查容器状态，然后运行 W8A8 量化。
+
+● Bash(ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker ps --format '{{.Names}} {{.Status}}' | grep p929643")
+  ⎿  p929643-int8-omni-v1 Up 18 minutes
+
+● 容器在运行。现在分别运行 Step 2 (W8A8 量化) 和 Step 3 (W8A8 评测)。
+
+● Bash(ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker exec p929643-int8-omni-v1 bash -c '
+      # Check if quantized model…)
+  ⎿  total 1054236
+     drwxr-x--- 2 root root       4096 Mar  3 12:09 .
+     drwxr-xr-x 7 root root       4096 Mar  3 12:09 ..
+     … +12 lines (ctrl+o to expand)
+
+● W8A8 量化模型已存在（v0.5.0 时创建的，同样的 llmcompressor 0.8.1 RTN CPU 量化，模型完全一样）。直接跑 Step 3 — W8A8 评测。
+
+● Bash(ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker exec -d p929643-int8-omni-v1 bash -c '
+      OMNI_NPU_PATCHES_DIR=qwe…)
+  ⎿  (No output)
+
+● W8A8 评测已在后台启动。等待一会儿后检查进度。
+
+● Bash(sleep 30 && ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker exec p929643-int8-omni-v1 tail -30 /data/w8a8_eval.…)
+  ⎿      from torch_npu.utils._error_code import ErrCode, pta_error
+       File "/usr/local/lib/python3.11/site-packages/torch_npu/utils/__init__.py", line 4, in <module>
+         from torch_npu import _C
+     … +27 lines (ctrl+o to expand)
+  ⎿  (timeout 1m)
+
+● CANN 环境未加载。需要先 source 环境变量。让我检查 v1.0.0 容器内的 CANN 路径。
+
+● Bash(ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker exec p929643-int8-omni-v1 bash -c 'cat /data/run_v1_all.sh'")
+  ⎿  #!/bin/sh
+     set -e
+     source /usr/local/Ascend/ascend-toolkit/set_env.sh 2>/dev/null
+     … +48 lines (ctrl+o to expand)
+
+● 需要 source CANN 环境。重新运行带正确环境的 W8A8 评测：
+
+● Bash(ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker exec -d p929643-int8-omni-v1 bash -c '
+      source /usr/local/Ascend…)
+  ⎿  (No output)
+
+● Bash(sleep 45 && ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker exec p929643-int8-omni-v1 tail -40 /data/w8a8_eval.…)
+  ⎿  (EngineCore_DP0 pid=2741) INFO 03-03 15:47:10 [vllm.py:707] Cudagraph is disabled under eager mode
+     INFO 03-03 15:47:10 [llm.py:343] Supported tasks: ['generate']
+     The tokenizer you are loading from '/data/int8/Qwen3-0.6B-W8A8' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e
+     … +31 lines (ctrl+o to expand)
+  ⎿  (timeout 1m 30s)
+
+● 推理正在进行中，已处理 ~20%。等待完成。
+
+● Bash(sleep 60 && ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker exec p929643-int8-omni-v1 tail -30 /data/w8a8_eval.…)
+  ⎿  Processed prompts:   7%|▋         | 97/1320 [00:02<00:24, 49.67it/s, est. speed input: 36833.88 toks/s, output: 32.44 toks/s]
+     Processed prompts:   8%|▊         | 109/1320 [00:03<00:44, 27.42it/s, est. speed input: 30961.62 toks/s, output: 28.37 toks/s]
+     Processed prompts:  11%|█         | 145/1320 [00:03<00:20, 57.59it/s, est. speed input: 36091.01 toks/s, output: 36.54 toks/s]
+     … +17 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+● W8A8 评测完成！结果：word_perplexity = 61.1840
+
+  结果已保存。engine 在关闭时 core dump 是已知的非致命问题，不影响结果。
+
+  来汇总 v1.0.0 的全部结果：
+
+  ┌─────────────────────┬─────────┬─────────┬────────┐
+  │        容器         │  FP16   │  W8A8   │  劣化  │
+  ├─────────────────────┼─────────┼─────────┼────────┤
+  │ vllm-ascend:v0.13.0 │ 60.0455 │ 60.9913 │ +1.57% │
+  ├─────────────────────┼─────────┼─────────┼────────┤
+  │ omni-infer:v0.5.0   │ 60.0318 │ 61.1840 │ +1.92% │
+  ├─────────────────────┼─────────┼─────────┼────────┤
+  │ omni-infer:v1.0.0   │ 60.0255 │ 61.1840 │ +1.93% │
+  └─────────────────────┴─────────┴─────────┴────────┘
+
+  三个容器环境下 W8A8 INT8 真量化的 PPL 劣化均在 2% 以内。v1.0.0 的 FP16 baseline 略好 (60.0255 vs 60.0318)，W8A8 结果与 v0.5.0 完全一致 (61.1840)，符合预期——量化模型是同一个。
+
+  现在更新 checkpoint 和 memory 文件。
+
+● Recalled 1 memory, wrote 1 memory (ctrl+o to expand)
+
+● 现在创建 checkpoint 003 记录 v1.0.0 的完整过程。
+
+● Wrote 1 memory (ctrl+o to expand)
+
+● omni-infer v1.0.0 上的 FP16 + W8A8 INT8 真量化全流程已完成。
+
+  最终结果汇总（三个昇腾容器环境）：
+
+  ┌─────────────────────┬─────────┬─────────┬────────┐
+  │        容器         │  FP16   │  W8A8   │  劣化  │
+  ├─────────────────────┼─────────┼─────────┼────────┤
+  │ vllm-ascend:v0.13.0 │ 60.0455 │ 60.9913 │ +1.57% │
+  ├─────────────────────┼─────────┼─────────┼────────┤
+  │ omni-infer:v0.5.0   │ 60.0318 │ 61.1840 │ +1.92% │
+  ├─────────────────────┼─────────┼─────────┼────────┤
+  │ omni-infer:v1.0.0   │ 60.0255 │ 61.1840 │ +1.93% │
+  └─────────────────────┴─────────┴─────────┴────────┘
+
+  关键观察：
+  - 三个环境 FP16 baseline 非常一致（60.03~60.05），v1.0.0 略优
+  - W8A8 结果 v0.5.0 和 v1.0.0 完全一致（61.1840），因为用的是同一个量化模型
+  - vllm-ascend v0.13.0 的 W8A8 结果略好（60.9913），可能因为 vllm 版本不同（0.13.0 vs 0.12.0）
+  - 所有环境 W8A8 劣化均 <2%
+
+  已保存 checkpoint 003 和更新 MEMORY.md。
+
+✻ Churned for 1h 4m 30s
+
+! pwd
+  ⎿  /home/p00929643/int8
+
+❯ !tmux capture-pane -pS - > all_history666.txt
+
+● Read 1 file (ctrl+o to expand)
+
+● 看起来你在本地执行了 tmux capture-pane 命令捕获终端历史到 all_history666.txt。需要我对这个文件做什么处理吗？
+
+! tmux capture-pane -pS - > all_history666.txt
+  ⎿  (No output)
+
+❯ 首先给我一个详细的报告，解释当前真量化模型的具体位置在哪里？比如是哪一个mlp以及attention的哪一部分，比如某一个matmul。
+
+● 好的，我来详细分析 W8A8 量化模型的量化位置。
+
+● Bash(ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker exec p929643-int8-omni-v1 cat /data/int8/Qwen3-0.6B-W8A8/config…)
+  ⎿  {
+       "architectures": [
+     "Qwen3ForCausalLM"
+     … +97 lines (ctrl+o to expand)
+
+● Bash(ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker exec p929643-int8-omni-v1 python3 -c \"
+      from safetensors import…)
+  ⎿  Error: Exit code 1
+     Traceback (most recent call last):
+       File "/usr/local/lib/python3.11/site-packages/torch_npu/__init__.py", line 41, in <module>
+         import torch_npu.npu
+       File "/usr/local/lib/python3.11/site-packages/torch_npu/npu/__init__.py", line 140, in <module>
+         from torch_npu.utils import _should_print_warning
+       File "/usr/local/lib/python3.11/site-packages/torch_npu/utils/__init__.py", line 4, in <module>
+         from torch_npu import _C
+     ImportError: libhccl.so: cannot open shared object file: No such file or directory
+
+     … +76 lines (ctrl+o to see all)
+
+
+
+
+
+
+● config.json 已拿到。safetensors 分析需要 source CANN 环境，让我重新运行：
+
+● Bash(ssh -i /home/p00929643/.ssh/KeyPair-d9c2.pem -o StrictHostKeyChecking=no root@1.95.7.166 "docker exec p929643-int8-omni-v1 bash -c '
+      source /usr/local/Ascend/as…)
+  ⎿  === QUANTIZED WEIGHTS (INT8) ===
+       model.layers.0.mlp.down_proj.weight  shape=[1024, 3072]  dtype=torch.int8
+       model.layers.0.mlp.gate_proj.weight  shape=[3072, 1024]  dtype=torch.int8
+     … +151 lines (ctrl+o to expand)
+  ⎿  (timeout 30s)
+
+● Read 1 file (ctrl+o to expand)
+
+● 数据完整拿到了。下面是详细报告。
+
+  ---
+  Qwen3-0.6B W8A8 INT8 真量化模型 — 详细量化位置报告
+
+  模型结构概览
+
+  Qwen3-0.6B 有 28 层 Transformer Decoder Block（layer 0~27），每层包含：
+  - Self-Attention：Multi-Head Attention (16 heads) + Grouped-Query Attention (8 KV heads)
+  - MLP：SwiGLU (gate + up → SiLU → down)
+
+  量化配置 (config.json → quantization_config)
+
+  quant_method: compressed-tensors
+  format: int-quantized
+  权重 (weights):  INT8, symmetric, per-channel static, minmax observer
+  激活 (inputs):   INT8, symmetric, per-token dynamic
+  targets:         所有 Linear 层
+  ignore:          ["lm_head"]
+
+  ---
+  一、被量化的组件（196 个 Linear 层 → INT8）
+
+  每一层（layer 0~27）共 7 个 Linear，28 层 × 7 = 196 个：
+
+  Self-Attention（4 个 Linear / 层 = 112 个）
+
+  ┌────────┬─────────────────────────┬──────────────┬────────────────────────────────────────────────────────────────┐
+  │  投影  │         权重名          │     形状     │                       对应的 MatMul 操作                       │
+  ├────────┼─────────────────────────┼──────────────┼────────────────────────────────────────────────────────────────┤
+  │ Q 投影 │ self_attn.q_proj.weight │ [2048, 1024] │ Q = X @ Wq^T — 将 hidden_state 投影为 Query                    │
+  ├────────┼─────────────────────────┼──────────────┼────────────────────────────────────────────────────────────────┤
+  │ K 投影 │ self_attn.k_proj.weight │ [1024, 1024] │ K = X @ Wk^T — 将 hidden_state 投影为 Key                      │
+  ├────────┼─────────────────────────┼──────────────┼────────────────────────────────────────────────────────────────┤
+  │ V 投影 │ self_attn.v_proj.weight │ [1024, 1024] │ V = X @ Wv^T — 将 hidden_state 投影为 Value                    │
+  ├────────┼─────────────────────────┼──────────────┼────────────────────────────────────────────────────────────────┤
+  │ O 投影 │ self_attn.o_proj.weight │ [1024, 2048] │ Out = Attn_output @ Wo^T — 将 attention 输出投影回 hidden_size │
+  └────────┴─────────────────────────┴──────────────┴────────────────────────────────────────────────────────────────┘
+
+  Q 投影输出维度 2048 = 16 heads × 128 head_dim
+  K/V 投影输出维度 1024 = 8 KV heads × 128 head_dim（GQA，2 query heads 共享 1 KV head）
+
+  注意：Q @ K^T 的注意力得分计算（Scaled Dot-Product Attention）不涉及量化——这是 activation × activation 的矩阵乘法，没有可量化的权重矩阵。同理 softmax(scores) @ V 也不涉及权重量化。
+
+  MLP / FFN（3 个 Linear / 层 = 84 个）
+
+  ┌───────────┬──────────────────────┬──────────────┬────────────────────────────────────────────────────────────────────────┐
+  │   投影    │        权重名        │     形状     │                           对应的 MatMul 操作                           │
+  ├───────────┼──────────────────────┼──────────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Gate 投影 │ mlp.gate_proj.weight │ [3072, 1024] │ gate = X @ Wgate^T — SwiGLU 的 gate 分支                               │
+  ├───────────┼──────────────────────┼──────────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Up 投影   │ mlp.up_proj.weight   │ [3072, 1024] │ up = X @ Wup^T — SwiGLU 的 up 分支                                     │
+  ├───────────┼──────────────────────┼──────────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Down 投影 │ mlp.down_proj.weight │ [1024, 3072] │ out = (SiLU(gate) * up) @ Wdown^T — 从 intermediate 投影回 hidden_size │
+  └───────────┴──────────────────────┴──────────────┴────────────────────────────────────────────────────────────────────────┘
+
+  intermediate_size = 3072 = 3 × hidden_size (1024)
+
+  量化在推理时的实际执行
+
+  每个被量化的 Linear 在昇腾 NPU 上通过 CANN aclnnQuantMatmul 执行：
+
+  output = QuantMatmul(input_int8, weight_int8, input_scale, weight_scale)
+
+  - weight 存储为 INT8 (static, per-channel)，shape [out_features, 1] 的 weight_scale 随模型保存
+  - input（激活值）在推理时动态量化为 INT8 (dynamic, per-token)
+  - 结果反量化回 BF16 继续后续计算
+
+  ---
+  二、未被量化的组件（115 个 tensor，保持 BF16）
+
+  ┌──────────────────────────┬──────┬────────────────┬────────────────────────────────────────────────┐
+  │           组件           │ 数量 │      形状      │                      原因                      │
+  ├──────────────────────────┼──────┼────────────────┼────────────────────────────────────────────────┤
+  │ lm_head                  │ 1    │ [151936, 1024] │ ignore=["lm_head"] 显式排除 — 输出层对精度敏感 │
+  ├──────────────────────────┼──────┼────────────────┼────────────────────────────────────────────────┤
+  │ embed_tokens             │ 1    │ [151936, 1024] │ Embedding 层不是 Linear，不在 targets 中       │
+  ├──────────────────────────┼──────┼────────────────┼────────────────────────────────────────────────┤
+  │ input_layernorm          │ 28   │ [1024]         │ RMSNorm，非 Linear                             │
+  ├──────────────────────────┼──────┼────────────────┼────────────────────────────────────────────────┤
+  │ post_attention_layernorm │ 28   │ [1024]         │ RMSNorm，非 Linear                             │
+  ├──────────────────────────┼──────┼────────────────┼────────────────────────────────────────────────┤
+  │ q_norm                   │ 28   │ [128]          │ QKV Norm（Qwen3 特有），非 Linear              │
+  ├──────────────────────────┼──────┼────────────────┼────────────────────────────────────────────────┤
+  │ k_norm                   │ 28   │ [128]          │ QKV Norm（Qwen3 特有），非 Linear              │
+  ├──────────────────────────┼──────┼────────────────┼────────────────────────────────────────────────┤
+  │ model.norm               │ 1    │ [1024]         │ 最终 RMSNorm，非 Linear                        │
+  └──────────────────────────┴──────┴────────────────┴────────────────────────────────────────────────┘
+
+  ---
+  三、完整计算流图（单层）
+
+  Input (BF16)
+    │
+    ├── input_layernorm (BF16 RMSNorm)
+    │
+    ├── Self-Attention
+    │   ├── q_proj: INT8 QuantMatmul → Q  ← 量化点 ①
+    │   ├── k_proj: INT8 QuantMatmul → K  ← 量化点 ②
+    │   ├── v_proj: INT8 QuantMatmul → V  ← 量化点 ③
+    │   ├── q_norm / k_norm (BF16)
+    │   ├── RoPE (BF16)
+    │   ├── Q @ K^T → scores (BF16, 无权重, 不量化)
+    │   ├── softmax (BF16)
+    │   ├── scores @ V → attn_output (BF16, 无权重, 不量化)
+    │   └── o_proj: INT8 QuantMatmul → output  ← 量化点 ④
+    │
+    ├── Residual Add (BF16)
+    ├── post_attention_layernorm (BF16 RMSNorm)
+    │
+    ├── MLP (SwiGLU)
+    │   ├── gate_proj: INT8 QuantMatmul → gate  ← 量化点 ⑤
+    │   ├── up_proj:   INT8 QuantMatmul → up    ← 量化点 ⑥
+    │   ├── SiLU(gate) * up (BF16, 逐元素, 不量化)
+    │   └── down_proj: INT8 QuantMatmul → output ← 量化点 ⑦
+    │
+    └── Residual Add (BF16)
+        │
+        Output (BF16)
+
+  每层 7 个量化 MatMul 点，28 层共 196 个。
+
+  四、统计汇总
+
+  ┌──────────────────────────────────────┬─────────────┬───────┬──────┐
+  │                 类别                 │ tensor 数量 │ dtype │ 占比 │
+  ├──────────────────────────────────────┼─────────────┼───────┼──────┤
+  │ 量化 Linear 权重                     │ 196         │ INT8  │ —    │
+  ├──────────────────────────────────────┼─────────────┼───────┼──────┤
+  │ 量化 weight_scale                    │ 196         │ BF16  │ —    │
+  ├──────────────────────────────────────┼─────────────┼───────┼──────┤
+  │ 未量化权重 (lm_head + embed + norms) │ 115         │ BF16  │ —    │
+  ├──────────────────────────────────────┼─────────────┼───────┼──────┤
+  │ 总计                                 │ 507         │       │      │
+  └──────────────────────────────────────┴─────────────┴───────┴──────┘
+
+  从参数量角度：196 个 INT8 权重覆盖了模型中所有的矩阵乘法权重（除
+  lm_head），这是模型计算量的主体。未量化的部分（Embedding、Norms、lm_head）要么是查表操作（Embedding），要么是逐元素运算（RMSNorm），要么是输出精度敏感层（lm_head）。
+
+✻ Worked for 1m 49s
+
+! tmux capture-pane -pS - > all_history666.txt
+  ⎿  (No output)
+
+❯ 现在我想要把当前已经跑通的这个 lm_harness 以及真量化的代码搬运到一个由于保密原因claude code无法接触到的一个服务器（服务器有
+  omni-infer:v1.0.0的docker环境），然后把当前的lm_harness测ppl的流程应用到一个私密的模型上面。首先你做一些准备尽可能让这个搬运过程更加容易。然后告诉我详细的步骤，如何去做这种搬运。
+
+● 好的，我来准备一个完全自包含的迁移包。先收集所有需要的文件。
+
+● Read 4 files (ctrl+o to expand)
+
+● 现在创建完整的迁移包。先创建目录结构和所有脚本文件：
+
+● Bash(mkdir -p /home/p00929643/int8/migration_pack/data)
+  ⎿  Done
+
+● Bash(cp -r /home/p00929643/int8/wikitext2_doc_level/ /home/p00929643/int8/migration_pack/data/wikitext2_doc_level/)
+  ⎿  Done
+
+● Now create all the scripts — making them generic with configurable paths:
+
+● Write(wikitext_local.yaml)
+  ⎿  Wrote 16 lines to wikitext_local.yaml
+       1 task: wikitext_local
+       2 dataset_path: __TASK_DIR__/data/wikitext2_doc_level
+       3 output_type: loglikelihood_rolling
+       4 test_split: test
+       5 doc_to_text: ""
+       6 doc_to_target: "{{text}}"
+       7 process_results: !function preprocess_wikitext_local.process_results
+       8 metric_list:
+       9   - metric: word_perplexity
+      10     higher_is_better: false
+     … +6 lines (ctrl+o to expand)
+
+
+● Write(preprocess_wikitext_local.py)
+  ⎿  Wrote 17 lines to preprocess_wikitext_local.py
+       1 """
+       2 process_results for wikitext_local task.
+       3 doc field: 'text' (document-level, already merged)
+       4 """
+       5 import re
+       6
+       7
+       8 def process_results(doc, results):
+       9     (loglikelihood,) = results
+      10     text = doc["text"]
+     … +7 lines (ctrl+o to expand)
+
+● Write(quantize_w8a8_cpu.py)
+  ⎿  Wrote 52 lines to quantize_w8a8_cpu.py
+       1 """
+       2 W8A8 INT8 量化脚本 (CPU, 无需 GPU/NPU)
+       3 使用 llmcompressor 0.8.1 RTN (Round-To-Nearest)，data-free。
+       4
+       5 用法:
+       6   python3 quantize_w8a8_cpu.py --model /path/to/model --output /path/to/output
+       7
+       8 量化配置:
+       9   权重: INT8, symmetric, per-channel static
+      10   激活: INT8, symmetric, per-token dynamic
+     … +42 lines (ctrl+o to expand)
+
+
+● Write(setup.sh)
+  ⎿  Wrote 257 lines to setup.sh
+       1 #!/bin/bash
+       2 # ============================================================
+       3 # omni-infer v1.0.0 环境初始化 + W8A8 INT8 PPL 评测全流程
+       4 #
+       5 # 前置条件:
+       6 #   - 已在 omni-infer v1.0.0 容器内
+       7 #   - 模型已挂载到容器内某个路径
+       8 #   - 本 migration_pack 目录已复制到容器内
+       9 #
+      10 # 用法:
+     … +247 lines (ctrl+o to expand)
+
+● Write(README.md)
+  ⎿  Wrote 161 lines to README.md
+       1 # W8A8 INT8 真量化 PPL 评测迁移包
+       2
+       3 在 omni-infer v1.0.0 (昇腾 910) 上进行 FP16 baseline + W8A8 INT8 真量化 PPL 评测。
+       4
+       5 ## 文件清单
+       6
+       7 ```
+       8 migration_pack/
+       9 ├── README.md                  ← 本文件
+      10 ├── setup.sh                   ← 一键安装 + 评测脚本
+     … +151 lines (ctrl+o to expand)
+
+
+● 现在打包：
+
+● Bash(tar czf migration_pack.tar.gz migration_pack/ && ls -lh migration_pack.tar.gz)
+  ⎿  -rw-rw-r-- 1 shared shared 6.4M Mar  3 12:05 migration_pack.tar.gz
+
+● Searched for 1 pattern (ctrl+o to expand)
+
+● 迁移包已准备好。以下是详细的搬运步骤：
+
+  ---
+  迁移包内容
+
+  /home/p00929643/int8/migration_pack.tar.gz (6.4MB)，包含：
+
+  ┌──────────────────────────────┬───────────────────────────────────────────────┐
+  │             文件             │                     用途                      │
+  ├──────────────────────────────┼───────────────────────────────────────────────┤
+  │ setup.sh                     │ 一键脚本：安装依赖 + 自动 patch + 量化 + 评测 │
+  ├──────────────────────────────┼───────────────────────────────────────────────┤
+  │ quantize_w8a8_cpu.py         │ W8A8 量化 (CPU, 支持 --model / --output 参数) │
+  ├──────────────────────────────┼───────────────────────────────────────────────┤
+  │ wikitext_local.yaml          │ lm-eval 任务配置                              │
+  ├──────────────────────────────┼───────────────────────────────────────────────┤
+  │ preprocess_wikitext_local.py │ word_perplexity 计算逻辑                      │
+  ├──────────────────────────────┼───────────────────────────────────────────────┤
+  │ data/wikitext2_doc_level/    │ 预处理好的 WikiText-2 数据 (7MB)              │
+  └──────────────────────────────┴───────────────────────────────────────────────┘
+
+  ---
+  搬运步骤
+
+  Step 1：将迁移包传到目标服务器宿主机
+
+  scp /home/p00929643/int8/migration_pack.tar.gz user@目标服务器:/data0/your_dir/
+  ssh user@目标服务器
+  cd /data0/your_dir && tar xzf migration_pack.tar.gz
+
+  Step 2：启动 omni-infer v1.0.0 容器
+
+  docker run -d --name my-int8-eval \
+    --device /dev/davinci0 --device /dev/davinci_manager \
+    --device /dev/devmm_svm --device /dev/hisi_hdc \
+    -v /path/to/your/models:/models:ro \
+    -v /data0/your_dir:/data \
+    -v /usr/local/dcmi:/usr/local/dcmi \
+    -v /usr/local/bin/npu-smi:/usr/local/bin/npu-smi \
+    -v /usr/local/Ascend/driver/lib64/:/usr/local/Ascend/driver/lib64/ \
+    -v /usr/local/Ascend/driver/version.info:/usr/local/Ascend/driver/version.info \
+    -v /etc/ascend_install.info:/etc/ascend_install.info \
+    --entrypoint /bin/sh \
+    swr.cn-east-4.myhuaweicloud.com/omni-ci/omniinfer-a2-arm:v1.0.0-vllm \
+    -c 'while true; do sleep 3600; done'
+
+  三个关键点：
+  1. 不要挂载到 /workspace — 会遮挡 omni-npu 源码
+  2. 私密模型挂载到 /models (或任意路径)
+  3. --entrypoint /bin/sh 因为这个镜像的 sleep infinity 有 bug
+
+  Step 3：进入容器，编辑配置
+
+  docker exec -it my-int8-eval bash
+  vi /data/migration_pack/setup.sh
+
+  修改 4 个路径变量：
+  MODEL_PATH="/models/你的私密模型"
+  QUANT_OUTPUT="/data/你的私密模型-W8A8"
+  RESULTS_FP16="/data/results/fp16"
+  RESULTS_W8A8="/data/results/w8a8"
+
+  Step 4：一键执行
+
+  bash /data/migration_pack/setup.sh all
+
+  这会依次执行：
+  1. install — 安装 lm-eval、llmcompressor，自动修复 torch 降级，patch rotary embedding
+  2. quantize — CPU 上 W8A8 量化 (RTN, data-free, 不需要 NPU)
+  3. eval_fp16 — FP16 baseline PPL 评测
+  4. eval_w8a8 — W8A8 INT8 真量化 PPL 评测
+
+  也可以分步执行：setup.sh install → setup.sh quantize → setup.sh eval_fp16 → setup.sh eval_w8a8
+
+  Step 5：查看结果
+
+  # 直接看 setup.sh 输出，或：
+  cat /data/results/fp16/*/results.json | python3 -m json.tool | grep word_perplexity
+  cat /data/results/w8a8/*/results.json | python3 -m json.tool | grep word_perplexity
+
+  ---
+  如果用私密模型而非 WikiText-2 评测
+
+  setup.sh 默认用包内的 WikiText-2 数据。如果用自己的数据集，需要：
+  1. 准备 parquet 文件，每行一个 text 字段（完整文档级文本）
+  2. 替换 data/wikitext2_doc_level/test-00000-of-00001.parquet
+  3. 或修改 wikitext_local.yaml 中的 dataset_path
+
+✻ Cogitated for 2m 38s
+
+❯ 首先如果只是代码或者占据存储比较少的文件的话，最好的搬运方式是github，其次我只是测试的对象是私密模型，换句话说，不是qwen而是我的私密模型，并非要使用别的测试集
+
+● 明白了。整理一下：
+
+  1. 代码和小文件通过 GitHub 传输
+  2. 测试集还是 WikiText-2，只是把模型从 Qwen3-0.6B 换成你的私密模型
+
+  先检查 GitHub 配置，然后创建 repo。
+
+● Bash(gh auth status 2>&1 | head -5)
+  ⎿  /bin/bash: line 1: gh: command not found
+
+● Read 1 file (ctrl+o to expand)
+
+● Bash(which git && git --version)
+  ⎿  /usr/bin/git
+     git version 2.34.1
+
+● Bash(git config --global user.name 2>/dev/null; git config --global user.email 2>/dev/null)
+  ⎿  Error: Exit code 1
+
+● 没有 gh CLI。我把迁移包整理成一个干净的 git repo，你自己 push 到 GitHub。同时简化脚本 — MODEL_PATH 作为参数传入而不是编辑文件。
+
+● Bash(rm -rf /home/p00929643/int8/migration_pack/.git 2>/dev/null; ls /home/p00929643/int8/migration_pack/)
+  ⎿  Error: Permission to use Bash with command rm -rf /home/p00929643/int8/migration_pack/.git 2>/dev/null; ls /home/p00929643/int8/migration_pack/ has been denied.
+
+
+
+● Read 1 file (ctrl+o to expand)
+
+● 现在重写所有文件 — 让 MODEL_PATH 通过命令行参数传入，不用编辑脚本：
+
+● Write(setup.sh)
+  ⎿  Added 118 lines, removed 165 lines
+        1  #!/bin/bash
+        2  # ============================================================
+        3 -# omni-infer v1.0.0 环境初始化 + W8A8 INT8 PPL 评测全流程
+        3 +# omni-infer v1.0.0 W8A8 INT8 PPL 评测全流程
+        4  #
+        5 -# 前置条件:
+        6 -#   - 已在 omni-infer v1.0.0 容器内
+        7 -#   - 模型已挂载到容器内某个路径
+        8 -#   - 本 migration_pack 目录已复制到容器内
+        9 -#
+        5  # 用法:
+       11 -#   1. 编辑下方 CONFIG 区域的路径
+       12 -#   2. bash setup.sh install   — 安装依赖 + 修复环境
+       13 -#   3. bash setup.sh quantize  — W8A8 量化 (CPU, ~5min for 0.6B)
+       14 -#   4. bash setup.sh eval_fp16 — FP16 baseline PPL
+       15 -#   5. bash setup.sh eval_w8a8 — W8A8 INT8 PPL
+       16 -#   6. bash setup.sh all       — 依次执行 install → quantize → eval_fp16 → eval_w8a8
+        6 +#   bash setup.sh install                          — 安装依赖 + 修复环境
+        7 +#   bash setup.sh quantize  /models/YourModel      — W8A8 量化
+        8 +#   bash setup.sh eval_fp16 /models/YourModel      — FP16 baseline PPL
+        9 +#   bash setup.sh eval_w8a8 /models/YourModel      — W8A8 INT8 PPL
+       10 +#   bash setup.sh all       /models/YourModel      — 全部依次执行
+       11  # ============================================================
+       12
+       19 -# ======================== CONFIG ========================
+       20 -# ★★★ 请根据实际环境修改以下路径 ★★★
+       13 +set -uo pipefail
+       14
+       22 -# FP16 原始模型路径 (容器内)
+       23 -MODEL_PATH="/models/YourModel"
+       24 -
+       25 -# W8A8 量化模型输出路径
+       26 -QUANT_OUTPUT="/data/YourModel-W8A8"
+       27 -
+       28 -# 本 migration_pack 在容器内的路径
+       15  TASK_DIR="$(cd "$(dirname "$0")" && pwd)"
+       16
+       31 -# 评测结果输出路径
+       32 -RESULTS_FP16="/data/results/fp16"
+       33 -RESULTS_W8A8="/data/results/w8a8"
+       34 -
+       35 -# ======================== END CONFIG ========================
+       36 -
+       37 -set -euo pipefail
+       38 -
+       39 -# ---- 颜色输出 ----
+       40 -RED='\033[0;31m'
+       17  GREEN='\033[0;32m'
+       18  YELLOW='\033[1;33m'
+       19 +RED='\033[0;31m'
+       20  NC='\033[0m'
+       44 -
+       21  info()  { echo -e "${GREEN}[INFO]${NC} $*"; }
+       22  warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+       23  error() { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
+       24
+       49 -# ---- 修正 wikitext_local.yaml 中的数据路径 ----
+       25 +# 从模型路径推导量化输出路径和结果路径
+       26 +resolve_paths() {
+       27 +    MODEL_PATH="$1"
+       28 +    MODEL_NAME="$(basename "${MODEL_PATH}")"
+       29 +    QUANT_OUTPUT="$(dirname "${MODEL_PATH}")/${MODEL_NAME}-W8A8"
+       30 +    RESULTS_DIR="$(dirname "${TASK_DIR}")/results"
+       31 +    RESULTS_FP16="${RESULTS_DIR}/${MODEL_NAME}-fp16"
+       32 +    RESULTS_W8A8="${RESULTS_DIR}/${MODEL_NAME}-w8a8"
+       33 +}
+       34 +
+       35 +# 自动检测模型类型 → omni-npu patches 目录名
+       36 +detect_model_type() {
+       37 +    python3 -c "
+       38 +from transformers import AutoConfig
+       39 +c = AutoConfig.from_pretrained('$1')
+       40 +print(c.model_type.lower())
+       41 +" 2>/dev/null || echo "auto"
+       42 +}
+       43 +
+       44 +# 修正 yaml 中的数据路径 (只执行一次)
+       45  fix_yaml_path() {
+       51 -    info "Fixing dataset path in wikitext_local.yaml ..."
+       52 -    sed -i "s|__TASK_DIR__|${TASK_DIR}|g" "${TASK_DIR}/wikitext_local.yaml"
+       53 -    info "  dataset_path → ${TASK_DIR}/data/wikitext2_doc_level"
+       46 +    if grep -q '__TASK_DIR__' "${TASK_DIR}/wikitext_local.yaml"; then
+       47 +        sed -i "s|__TASK_DIR__|${TASK_DIR}|g" "${TASK_DIR}/wikitext_local.yaml"
+       48 +        info "Fixed dataset path → ${TASK_DIR}/data/wikitext2_doc_level"
+       49 +    fi
+       50  }
+       51
+       56 -# ---- Step: install ----
+       52 +# ---- install ----
+       53  do_install() {
+       58 -    info "=============================="
+       59 -    info "Step: Install dependencies"
+       60 -    info "=============================="
+       54 +    info "=== Install dependencies ==="
+       55
+       62 -    # 1. Source CANN
+       63 -    if [ -f /usr/local/Ascend/ascend-toolkit/set_env.sh ]; then
+       64 -        source /usr/local/Ascend/ascend-toolkit/set_env.sh 2>/dev/null
+       65 -        info "CANN environment sourced"
+       66 -    else
+       67 -        warn "ascend-toolkit/set_env.sh not found, skipping CANN source"
+       68 -    fi
+       56 +    # Source CANN
+       57 +    source /usr/local/Ascend/ascend-toolkit/set_env.sh 2>/dev/null || true
+       58
+       70 -    # 2. 备份原始 torch wheel (aarch64)
+       59 +    # 备份 torch wheel
+       60      TORCH_VER=$(python3 -c "import torch; print(torch.__version__)" 2>/dev/null || echo "unknown")
+       72 -    info "Current torch version: ${TORCH_VER}"
+       73 -
+       74 -    WHEEL_DIR="${TASK_DIR}/torch_wheel"
+       61 +    info "Current torch: ${TORCH_VER}"
+       62 +    WHEEL_DIR="${TASK_DIR}/.torch_wheel"
+       63      mkdir -p "${WHEEL_DIR}"
+       64      if [ ! -f "${WHEEL_DIR}"/torch-*.whl ]; then
+       77 -        info "Exporting current torch wheel for later restoration ..."
+       78 -        pip download "torch==${TORCH_VER}" --no-deps -d "${WHEEL_DIR}" 2>/dev/null || \
+       79 -            warn "Could not download torch wheel. If llmcompressor downgrades torch, you'll need to manually restore it."
+       65 +        info "Saving torch wheel for restoration ..."
+       66 +        pip download "torch==${TORCH_VER}" --no-deps -d "${WHEEL_DIR}" 2>/dev/null || true
+       67      fi
+       68
+       82 -    # 3. 安装 lm-eval + llmcompressor
+       69 +    # 安装
+       70      info "Installing lm-eval, llmcompressor, ray ..."
+       71      pip install lm-eval llmcompressor==0.8.1 ray 2>&1 | tail -5
+       72
+       86 -    # 4. 修复 llmcompressor 的副作用
+       87 -    NEW_TORCH_VER=$(python3 -c "import torch; print(torch.__version__)" 2>/dev/null || echo "unknown")
+       88 -    if [ "${NEW_TORCH_VER}" != "${TORCH_VER}" ]; then
+       89 -        warn "torch was changed from ${TORCH_VER} to ${NEW_TORCH_VER}!"
+       73 +    # 修复 torch
+       74 +    NEW_VER=$(python3 -c "import torch; print(torch.__version__)" 2>/dev/null)
+       75 +    if [ "${NEW_VER}" != "${TORCH_VER}" ]; then
+       76 +        warn "torch changed: ${TORCH_VER} → ${NEW_VER}"
+       77          WHEEL=$(ls "${WHEEL_DIR}"/torch-*.whl 2>/dev/null | head -1)
+       78          if [ -n "${WHEEL}" ]; then
+       92 -            info "Restoring torch from saved wheel: ${WHEEL}"
+       79 +            info "Restoring torch from: ${WHEEL}"
+       80              pip install "${WHEEL}" --force-reinstall --no-deps 2>&1 | tail -3
+       81          else
+       95 -            warn "No saved wheel found. Manually reinstall torch ${TORCH_VER}!"
+       96 -            warn "  On aarch64: DO NOT use --index-url https://download.pytorch.org/whl/cpu (x86 only)"
+       82 +            error "No saved wheel. Manually reinstall torch ${TORCH_VER} (aarch64 wheel, NOT PyPI CPU index)"
+       83          fi
+       84      fi
+       85
+      100 -    info "Pinning compressed-tensors and transformers ..."
+      101 -    pip install "compressed-tensors==0.12.2" "transformers>=4.57" --no-deps 2>&1 | tail -3
+       86 +    # Pin versions
+       87 +    pip install "compressed-tensors==0.12.2" --no-deps 2>&1 | tail -2
+       88 +    # transformers: 保持 >=4.57 即可，不强制 pin 具体版本
+       89 +    TRANS_VER=$(python3 -c "import transformers; v=transformers.__version__; print(v)")
+       90 +    info "transformers: ${TRANS_VER}"
+       91
+      103 -    # 5. 修复 wikitext_local.yaml 路径
+       92 +    # 修复 yaml
+       93      fix_yaml_path
+       94
+      106 -    # 6. 修复 omni-npu rotary embedding (如果存在)
+       95 +    # Patch rotary embedding
+       96      ROTARY_FILE=$(find /workspace -path "*/omni_npu/layers/rotary_embedding/rotary_embedding_torch_npu.py" 2>/dev/null | head -1)
+      108 -    if [ -n "${ROTARY_FILE}" ]; then
+      109 -        if ! grep -q '\*\*kwargs' "${ROTARY_FILE}"; then
+      110 -            info "Patching rotary_embedding forward_oot to accept **kwargs ..."
+      111 -            sed -i 's/key: torch.Tensor | None = None,$/key: torch.Tensor | None = None,\n        **kwargs,/' "${ROTARY_FILE}"
+      112 -            info "  Patched: ${ROTARY_FILE}"
+      113 -        else
+      114 -            info "rotary_embedding already patched"
+      115 -        fi
+       97 +    if [ -n "${ROTARY_FILE}" ] && ! grep -q '\*\*kwargs' "${ROTARY_FILE}"; then
+       98 +        info "Patching rotary_embedding forward_oot ..."
+       99 +        sed -i 's/key: torch.Tensor | None = None,$/key: torch.Tensor | None = None,\n        **kwargs,/' "${ROTARY_FILE}"
+      100      fi
+      101
+      118 -    # 7. 验证
+      119 -    info "=============================="
+      120 -    info "Environment verification:"
+      121 -    info "=============================="
+      102 +    # 验证
+      103 +    info "=== Versions ==="
+      104      python3 -c "
+      105  import torch; print(f'  torch:              {torch.__version__}')
+      106  try:
+     ...
+      112  import llmcompressor; print(f'  llmcompressor:      {llmcompressor.__version__}')
+      113  import lm_eval; print(f'  lm-eval:            {lm_eval.__version__}')
+      114  "
+      133 -    info "Install complete!"
+      115 +    info "Install done!"
+      116  }
+      117
+      136 -# ---- Step: quantize ----
+      118 +# ---- quantize ----
+      119  do_quantize() {
+      138 -    info "=============================="
+      139 -    info "Step: W8A8 CPU Quantization"
+      140 -    info "=============================="
+      141 -    info "Model:  ${MODEL_PATH}"
+      120 +    [ -z "${1:-}" ] && error "Usage: setup.sh quantize /path/to/model"
+      121 +    resolve_paths "$1"
+      122 +    info "=== W8A8 Quantize (CPU) ==="
+      123 +    info "Input:  ${MODEL_PATH}"
+      124      info "Output: ${QUANT_OUTPUT}"
+      125
+      126      if [ -f "${QUANT_OUTPUT}/model.safetensors" ]; then
+      145 -        warn "Quantized model already exists at ${QUANT_OUTPUT}"
+      146 -        warn "Delete it first if you want to re-quantize"
+      127 +        warn "Already exists: ${QUANT_OUTPUT}, skipping"
+      128          return 0
+      129      fi
+      130
+      131      TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 \
+      132      python3 "${TASK_DIR}/quantize_w8a8_cpu.py" \
+      152 -        --model "${MODEL_PATH}" \
+      153 -        --output "${QUANT_OUTPUT}"
+      154 -
+      155 -    info "Quantization complete!"
+      133 +        --model "${MODEL_PATH}" --output "${QUANT_OUTPUT}"
+      134 +    info "Quantize done → ${QUANT_OUTPUT}"
+      135  }
+      136
+      158 -# ---- Step: eval_fp16 ----
+      159 -do_eval_fp16() {
+      160 -    info "=============================="
+      161 -    info "Step: FP16 Baseline PPL Eval"
+      162 -    info "=============================="
+      163 -
+      137 +# ---- eval ----
+      138 +do_eval() {
+      139 +    local label="$1" model_path="$2" output_dir="$3"
+      140      source /usr/local/Ascend/ascend-toolkit/set_env.sh 2>/dev/null || true
+      141 +    fix_yaml_path
+      142
+      166 -    OMNI_NPU_PATCHES_DIR=$(python3 -c "
+      167 -from transformers import AutoConfig
+      168 -c = AutoConfig.from_pretrained('${MODEL_PATH}')
+      169 -mt = c.model_type.lower()
+      170 -# 常见映射
+      171 -mapping = {'qwen3': 'qwen3', 'qwen2': 'qwen2', 'llama': 'llama', 'chatglm': 'chatglm'}
+      172 -print(mapping.get(mt, mt))
+      173 -" 2>/dev/null || echo "auto")
+      143 +    local model_type
+      144 +    model_type=$(detect_model_type "${model_path}")
+      145 +    info "=== ${label} PPL Eval ==="
+      146 +    info "Model: ${model_path}"
+      147 +    info "Patches: ${model_type}"
+      148
+      175 -    info "Model type for omni-npu patches: ${OMNI_NPU_PATCHES_DIR}"
+      176 -    info "Model: ${MODEL_PATH}"
+      177 -
+      178 -    OMNI_NPU_PATCHES_DIR="${OMNI_NPU_PATCHES_DIR}" \
+      149 +    mkdir -p "${output_dir}"
+      150 +    OMNI_NPU_PATCHES_DIR="${model_type}" \
+      151      ASCEND_RT_VISIBLE_DEVICES=0 \
+      152      VLLM_USE_V1=0 \
+      153      HF_DATASETS_OFFLINE=1 \
+      154      lm_eval --model vllm \
+      183 -        --model_args "pretrained=${MODEL_PATH},dtype=auto,gpu_memory_utilization=0.8,enforce_eager=True" \
+      155 +        --model_args "pretrained=${model_path},dtype=auto,gpu_memory_utilization=0.8,enforce_eager=True" \
+      156          --include_path "${TASK_DIR}" \
+      157          --tasks wikitext_local \
+      158          --batch_size auto \
+      187 -        --output_path "${RESULTS_FP16}" \
+      188 -    || warn "Engine exited with error (common: core dump on shutdown, results may still be valid)"
+      159 +        --output_path "${output_dir}" \
+      160 +    || warn "Engine exited with error (results likely still valid)"
+      161
+      190 -    info "FP16 eval complete! Results at ${RESULTS_FP16}"
+      162 +    info "${label} done → ${output_dir}"
+      163  }
+      164
+      193 -# ---- Step: eval_w8a8 ----
+      194 -do_eval_w8a8() {
+      195 -    info "=============================="
+      196 -    info "Step: W8A8 INT8 PPL Eval"
+      197 -    info "=============================="
+      165 +do_eval_fp16() {
+      166 +    [ -z "${1:-}" ] && error "Usage: setup.sh eval_fp16 /path/to/model"
+      167 +    resolve_paths "$1"
+      168 +    do_eval "FP16" "${MODEL_PATH}" "${RESULTS_FP16}"
+      169 +}
+      170
+      199 -    source /usr/local/Ascend/ascend-toolkit/set_env.sh 2>/dev/null || true
+      200 -
+      201 -    if [ ! -f "${QUANT_OUTPUT}/model.safetensors" ]; then
+      202 -        error "Quantized model not found at ${QUANT_OUTPUT}. Run 'setup.sh quantize' first."
+      203 -    fi
+      204 -
+      205 -    OMNI_NPU_PATCHES_DIR=$(python3 -c "
+      206 -from transformers import AutoConfig
+      207 -c = AutoConfig.from_pretrained('${QUANT_OUTPUT}')
+      208 -mt = c.model_type.lower()
+      209 -mapping = {'qwen3': 'qwen3', 'qwen2': 'qwen2', 'llama': 'llama', 'chatglm': 'chatglm'}
+      210 -print(mapping.get(mt, mt))
+      211 -" 2>/dev/null || echo "auto")
+      212 -
+      213 -    info "Model type for omni-npu patches: ${OMNI_NPU_PATCHES_DIR}"
+      214 -    info "Quantized model: ${QUANT_OUTPUT}"
+      215 -
+      216 -    OMNI_NPU_PATCHES_DIR="${OMNI_NPU_PATCHES_DIR}" \
+      217 -    ASCEND_RT_VISIBLE_DEVICES=0 \
+      218 -    VLLM_USE_V1=0 \
+      219 -    HF_DATASETS_OFFLINE=1 \
+      220 -    lm_eval --model vllm \
+      221 -        --model_args "pretrained=${QUANT_OUTPUT},dtype=auto,gpu_memory_utilization=0.8,enforce_eager=True" \
+      222 -        --include_path "${TASK_DIR}" \
+      223 -        --tasks wikitext_local \
+      224 -        --batch_size auto \
+      225 -        --output_path "${RESULTS_W8A8}" \
+      226 -    || warn "Engine exited with error (common: core dump on shutdown, results may still be valid)"
+      227 -
+      228 -    info "W8A8 eval complete! Results at ${RESULTS_W8A8}"
+      171 +do_eval_w8a8() {
+      172 +    [ -z "${1:-}" ] && error "Usage: setup.sh eval_w8a8 /path/to/model"
+      173 +    resolve_paths "$1"
+      174 +    [ -f "${QUANT_OUTPUT}/model.safetensors" ] || error "Quantized model not found: ${QUANT_OUTPUT}. Run 'setup.sh quantize' first."
+      175 +    do_eval "W8A8" "${QUANT_OUTPUT}" "${RESULTS_W8A8}"
+      176  }
+      177
+      231 -# ---- Main ----
+      178 +# ---- main ----
+      179  case "${1:-help}" in
+      180      install)   do_install ;;
+      234 -    quantize)  do_quantize ;;
+      235 -    eval_fp16) do_eval_fp16 ;;
+      236 -    eval_w8a8) do_eval_w8a8 ;;
+      181 +    quantize)  do_quantize "${2:-}" ;;
+      182 +    eval_fp16) do_eval_fp16 "${2:-}" ;;
+      183 +    eval_w8a8) do_eval_w8a8 "${2:-}" ;;
+      184      all)
+      185 +        [ -z "${2:-}" ] && error "Usage: setup.sh all /path/to/model"
+      186          do_install
+      239 -        do_quantize
+      240 -        do_eval_fp16
+      241 -        do_eval_w8a8
+      242 -        info "=============================="
+      243 -        info "All steps complete!"
+      244 -        info "FP16 results: ${RESULTS_FP16}"
+      245 -        info "W8A8 results: ${RESULTS_W8A8}"
+      246 -        info "=============================="
+      187 +        do_quantize "$2"
+      188 +        do_eval_fp16 "$2"
+      189 +        do_eval_w8a8 "$2"
+      190 +        resolve_paths "$2"
+      191 +        info "========================================="
+      192 +        info "All done! Results:"
+      193 +        info "  FP16: ${RESULTS_FP16}"
+      194 +        info "  W8A8: ${RESULTS_W8A8}"
+      195 +        info "========================================="
+      196          ;;
+      197      *)
+      249 -        echo "Usage: bash setup.sh {install|quantize|eval_fp16|eval_w8a8|all}"
+      198 +        echo "Usage: bash setup.sh <command> [model_path]"
+      199          echo ""
+      251 -        echo "  install   — Install dependencies and fix environment"
+      252 -        echo "  quantize  — W8A8 INT8 quantization (CPU)"
+      253 -        echo "  eval_fp16 — FP16 baseline PPL evaluation"
+      254 -        echo "  eval_w8a8 — W8A8 INT8 PPL evaluation"
+      255 -        echo "  all       — Run all steps in sequence"
+      200 +        echo "Commands:"
+      201 +        echo "  install                    Install deps + fix environment"
+      202 +        echo "  quantize  /path/to/model   W8A8 quantization (CPU)"
+      203 +        echo "  eval_fp16 /path/to/model   FP16 baseline PPL"
+      204 +        echo "  eval_w8a8 /path/to/model   W8A8 INT8 PPL"
+      205 +        echo "  all       /path/to/model   Run all steps"
+      206 +        echo ""
+      207 +        echo "Example:"
+      208 +        echo "  bash setup.sh all /models/MyPrivateModel"
+      209          ;;
+      210  esac
+
+● Write(README.md)
+  ⎿  Added 30 lines, removed 122 lines
+       1 -# W8A8 INT8 真量化 PPL 评测迁移包
+       1 +# W8A8 INT8 真量化 PPL 评测工具
+       2
+       3 -在 omni-infer v1.0.0 (昇腾 910) 上进行 FP16 baseline + W8A8 INT8 真量化 PPL 评测。
+       3 +在 omni-infer v1.0.0 (昇腾 910) 上对任意模型进行 FP16 baseline + W8A8 INT8 真量化 WikiText-2 PPL 评测。
+       4
+       5  ## 文件清单
+       6
+       7  ```
+       8 -migration_pack/
+       9 -├── README.md                  ← 本文件
+      10 -├── setup.sh                   ← 一键安装 + 评测脚本
+      11 -├── quantize_w8a8_cpu.py       ← W8A8 量化脚本 (CPU, data-free)
+      12 -├── wikitext_local.yaml        ← lm-eval 任务配置
+      13 -├── preprocess_wikitext_local.py ← word_perplexity 计算逻辑
+       8 +├── setup.sh                     一键脚本 (安装/量化/评测)
+       9 +├── quantize_w8a8_cpu.py         W8A8 CPU 量化脚本
+      10 +├── wikitext_local.yaml          lm-eval 任务配置
+      11 +├── preprocess_wikitext_local.py word_perplexity 计算逻辑
+      12  └── data/
+      15 -    └── wikitext2_doc_level/   ← 预处理好的 WikiText-2 测试集 (7MB)
+      16 -        ├── test-00000-of-00001.parquet
+      17 -        ├── train-00000-of-00001.parquet
+      18 -        └── validation-00000-of-00001.parquet
+      13 +    └── wikitext2_doc_level/     WikiText-2 测试数据 (7MB)
+      14  ```
+      15
+      21 -## 快速开始
+      16 +## 使用方法
+      17
+      23 -### 1. 将迁移包复制到目标服务器
+      18 +### 1. 启动 omni-infer v1.0.0 容器
+      19
+      20  ```bash
+      26 -scp -r migration_pack/ user@target-server:/path/on/host/
+      27 -```
+      28 -
+      29 -### 2. 确保 omni-infer v1.0.0 容器已启动
+      30 -
+      31 -容器启动参考命令 (按实际环境修改设备和挂载):
+      32 -
+      33 -```bash
+      34 -docker run -d --name my-container \
+      21 +docker run -d --name int8-eval \
+      22    --device /dev/davinci0 --device /dev/davinci_manager \
+      23    --device /dev/devmm_svm --device /dev/hisi_hdc \
+      37 -  -v /path/to/models:/models:ro \
+      38 -  -v /path/on/host:/data \
+      24 +  -v /path/to/your/models:/models:ro \
+      25 +  -v /path/to/this/repo:/data/int8-ppl-eval \
+      26    -v /usr/local/dcmi:/usr/local/dcmi \
+      27    -v /usr/local/bin/npu-smi:/usr/local/bin/npu-smi \
+      28    -v /usr/local/Ascend/driver/lib64/:/usr/local/Ascend/driver/lib64/ \
+     ...
+       33    -c 'while true; do sleep 3600; done'
+       34  ```
+       35
+       49 -**关键注意**: 不要把宿主机目录挂载到 `/workspace`！omni-npu 源码在 `/workspace/omniinfer/`，
+       50 -挂载 `/workspace` 会遮挡它。建议挂载到 `/data`。
+       36 +> **不要**挂载到 `/workspace`，会遮挡 omni-npu 源码。
+       37
+       52 -### 3. 进入容器，编辑 setup.sh 中的路径配置
+       38 +### 2. 一键执行
+       39
+       40  ```bash
+       55 -docker exec -it my-container bash
+       56 -vi /data/migration_pack/setup.sh
+       41 +docker exec -it int8-eval bash
+       42 +bash /data/int8-ppl-eval/setup.sh all /models/YourModel
+       43  ```
+       44
+       59 -修改 CONFIG 区域:
+       45 +或分步:
+       46  ```bash
+       61 -MODEL_PATH="/models/YourModel"           # FP16 原始模型路径
+       62 -QUANT_OUTPUT="/data/YourModel-W8A8"      # 量化输出路径
+       63 -RESULTS_FP16="/data/results/fp16"        # FP16 评测结果路径
+       64 -RESULTS_W8A8="/data/results/w8a8"        # W8A8 评测结果路径
+       47 +bash setup.sh install                      # 安装依赖
+       48 +bash setup.sh quantize  /models/YourModel  # W8A8 量化
+       49 +bash setup.sh eval_fp16 /models/YourModel  # FP16 PPL
+       50 +bash setup.sh eval_w8a8 /models/YourModel  # W8A8 PPL
+       51  ```
+       52
+       67 -### 4. 运行
+       53 +量化模型自动保存到 `/models/YourModel-W8A8`，结果保存到 `../results/`。
+       54
+       69 -```bash
+       70 -# 一键全部执行
+       71 -bash /data/migration_pack/setup.sh all
+       55 +## 已知问题
+       56
+       73 -# 或分步执行
+       74 -bash /data/migration_pack/setup.sh install    # 安装依赖
+       75 -bash /data/migration_pack/setup.sh quantize   # W8A8 量化
+       76 -bash /data/migration_pack/setup.sh eval_fp16  # FP16 PPL
+       77 -bash /data/migration_pack/setup.sh eval_w8a8  # W8A8 PPL
+       78 -```
+       57 +| 问题 | 原因 | setup.sh 处理方式 |
+       58 +|------|------|------------------|
+       59 +| llmcompressor 降级 torch 到 2.8.0 | pip 依赖解析 | 自动备份+恢复 aarch64 wheel |
+       60 +| `forward_oot() got unexpected keyword 'is_prefill'` | omni-npu 兼容性 | 自动 patch |
+       61 +| `OMNI_NPU_PATCHES_DIR` 解析错误 | sys.argv 解析失败 | 自动从 config.json 检测 model_type |
+       62 +| graph capture `stream is captured` 错误 | CANN 不兼容 | enforce_eager=True |
+       63 +| engine 关闭 core dump | vllm 已知问题 | 结果不受影响，已处理 |
+       64
+       80 -## 已知问题及解决方案
+       81 -
+       82 -### 1. llmcompressor 降级 torch
+       83 -
+       84 -llmcompressor 安装时会把 torch 从 2.9.0 降到 2.8.0。`setup.sh install` 会自动备份
+       85 -并恢复 torch wheel。如果自动恢复失败:
+       86 -
+       87 -```bash
+       88 -# 找到原始 wheel
+       89 -find / -name "torch-2.9.0*aarch64*.whl" 2>/dev/null
+       90 -# 手动恢复
+       91 -pip install /path/to/torch-2.9.0-cp311-cp311-manylinux_2_28_aarch64.whl --force-reinstall --no-deps
+       92 -```
+       93 -
+       94 -**切勿** 用 `pip install torch==2.9.0 --index-url https://download.pytorch.org/whl/cpu`，
+       95 -该源只有 x86 wheel，在 aarch64 (昇腾服务器) 上会导致 `cannot import name 'amp'` 错误。
+       96 -
+       97 -### 2. NPURotaryEmbedding `is_prefill` 参数错误
+       98 -
+       99 -```
+      100 -TypeError: NPURotaryEmbedding.forward_oot() got an unexpected keyword argument 'is_prefill'
+      101 -```
+      102 -
+      103 -`setup.sh install` 会自动 patch。如果手动修复:
+      104 -
+      105 -```bash
+      106 -# 找到文件
+      107 -find /workspace -name "rotary_embedding_torch_npu.py" -path "*/omni_npu/*"
+      108 -# 在 forward_oot 方法的参数列表中，key 参数后面加一行:
+      109 -#   **kwargs,
+      110 -```
+      111 -
+      112 -### 3. omni-npu 模型路径解析失败
+      113 -
+      114 -omni-npu 从 sys.argv 解析模型类型，在 lm_eval 上下文中会解析错误。
+      115 -`setup.sh` 已通过 `OMNI_NPU_PATCHES_DIR` 环境变量自动检测模型类型。
+      116 -如果失败，手动设置:
+      117 -
+      118 -```bash
+      119 -export OMNI_NPU_PATCHES_DIR=qwen3   # 或 llama, qwen2 等
+      120 -```
+      121 -
+      122 -### 4. Graph capture 失败
+      123 -
+      124 -```
+      125 -RuntimeError: Not allow to synchronize captured-stream
+      126 -```
+      127 -
+      128 -`setup.sh` 已在 model_args 中加了 `enforce_eager=True` 来禁用 graph capture。
+      129 -
+      130 -### 5. Engine 关闭时 core dump
+      131 -
+      132 -lm_eval 评测完成后 vllm engine 进程会 core dump (`terminate called without an active exception`)。
+      133 -**结果不受影响**，评测数据已保存。`setup.sh` 用 `|| warn` 处理此错误。
+      134 -
+      135 -### 6. 使用自定义模型 (非 WikiText-2 数据)
+      136 -
+      137 -如果要用自己的数据:
+      138 -- 替换 `data/wikitext2_doc_level/` 下的 parquet 文件
+      139 -- 格式: 每行一个 `text` 字段，每个 text 是一个完整文档
+      140 -- 或修改 `wikitext_local.yaml` 的 `dataset_path` 指向新数据
+      141 -
+      142 -## 版本矩阵 (验证通过)
+      143 -
+      144 -| 组件 | omni-infer v1.0.0 内置 | 额外安装 |
+      145 -|------|----------------------|---------|
+      146 -| Python | 3.11 | - |
+      147 -| torch | 2.9.0 (aarch64) | - |
+      148 -| torch_npu | 2.9.0 | - |
+      149 -| vllm | 0.12.0 | - |
+      150 -| omni-npu | 0.2.0 | - |
+      151 -| CANN | 8.5.0 | - |
+      152 -| compressed-tensors | 0.12.2 | 需 pin |
+      153 -| transformers | 4.57.6 | 需 pin |
+      154 -| llmcompressor | 0.8.1 | 新装 |
+      155 -| lm-eval | 0.4.11 | 新装 |
+      156 -
+       65  ## 参考结果 (Qwen3-0.6B)
+       66
+       67  | 环境 | FP16 | W8A8 | 劣化 |
+
+● 现在初始化 git repo 并加 .gitignore：
+
+● Write(.gitignore)
+  ⎿  Wrote 4 lines to .gitignore
+      1 .torch_wheel/
+      2 __pycache__/
+      3 *.pyc
+      4 results/
+
+● Bash(cd /home/p00929643/int8/migration_pack && git init && git add -A && git status)
+  ⎿  hint: Using 'master' as the name for the initial branch. This default branch name
+     hint: is subject to change. To configure the initial branch name to use in all
+     hint: of your new repositories, which will suppress this warning, call:
+     … +23 lines (ctrl+o to expand)
+
+● Git repo 已就绪。总结迁移方案：
+
+  ---
+  迁移包已准备好
+
+  位置: /home/p00929643/int8/migration_pack/ (已 git init，9 个文件，~7MB)
+
+  你需要做的
+
+  Step 1: push 到 GitHub
+  cd /home/p00929643/int8/migration_pack
+  git commit -m "W8A8 INT8 PPL eval toolkit for omni-infer v1.0.0"
+  # 在 GitHub 创建 repo 后:
+  git remote add origin git@github.com:你的用户名/int8-ppl-eval.git
+  git push -u origin master
+
+  Step 2: 在目标服务器上 clone
+  git clone git@github.com:你的用户名/int8-ppl-eval.git
+
+  Step 3: 启动容器（注意不要挂载到 /workspace）
+  docker run -d --name int8-eval \
+    --device /dev/davinci0 ... \
+    -v /path/to/models:/models:ro \
+    -v /path/to/int8-ppl-eval:/data/int8-ppl-eval \
+    --entrypoint /bin/sh \
+    omniinfer-a2-arm:v1.0.0-vllm \
+    -c 'while true; do sleep 3600; done'
+
+  Step 4: 一键执行
+  docker exec -it int8-eval bash
+  bash /data/int8-ppl-eval/setup.sh all /models/你的私密模型
+
+  不需要编辑任何文件，模型路径作为命令行参数传入。setup.sh 会自动：
+  - 安装依赖 + 修复 torch 降级
+  - patch omni-npu 的 rotary embedding bug
+  - 从 config.json 检测 model_type 设置 OMNI_NPU_PATCHES_DIR
+  - 量化保存到 /models/你的私密模型-W8A8
+  - 跑 FP16 和 W8A8 两轮 PPL，结果保存到 ../results/
+
+✻ Worked for 1m 59s
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+! tmux capture-pane -pS - > all_history777.txt
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ! for bash mode
+
+
