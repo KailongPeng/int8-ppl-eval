@@ -52,9 +52,10 @@ resolve_paths() {
 # 自动检测模型类型 → omni-npu patches 目录名
 detect_model_type() {
     python3 -c "
-from transformers import AutoConfig
-c = AutoConfig.from_pretrained('$1')
-print(c.model_type.lower())
+import json, os
+cfg = os.path.join('$1', 'config.json')
+with open(cfg) as f:
+    print(json.load(f).get('model_type', 'auto').lower())
 " 2>/dev/null || echo "auto"
 }
 
