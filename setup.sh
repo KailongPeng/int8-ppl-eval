@@ -27,6 +27,10 @@ TASK_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVE_PORT="${SERVE_PORT:-8000}"
 TP_SIZE="${TP_SIZE:-1}"
 
+# 确保本地请求不走代理
+export no_proxy="${no_proxy:+${no_proxy},}localhost,127.0.0.1"
+export NO_PROXY="${no_proxy}"
+
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -182,8 +186,7 @@ do_serve() {
     # 后台启动服务
     if [ "${model_type}" = "pangu_v2_moe" ]; then
         info "Using run_pangu.sh for pangu_v2_moe model"
-        bash /home/p00929643/omni-npu/start_server/run_pangu.sh \
-            > "${TASK_DIR}/vllm_serve.log" 2>&1 &
+        bash /home/p00929643/omni-npu/start_server/run_pangu.sh &
     else
         vllm serve "${model_path}" \
             --dtype auto \
