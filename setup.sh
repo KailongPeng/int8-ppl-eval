@@ -244,13 +244,13 @@ do_eval() {
 
     info "=== PPL Eval via API ==="
     info "Model: ${model_path}"
-    info "API: http://localhost:${SERVE_PORT}/v1/completions"
+    info "API: http://7.150.11.4:8000/v1/completions"
     info "Output: ${output_dir}"
 
     mkdir -p "${output_dir}"
     HF_DATASETS_OFFLINE=1 \
     lm_eval --model local-completions \
-        --model_args "model=${model_path},base_url=http://localhost:${SERVE_PORT}/v1/completions,tokenizer_backend=huggingface,tokenizer=${model_path}" \
+        --model_args "model=${model_path},base_url=http://7.150.11.4:8000/v1/completions,tokenizer_backend=huggingface,tokenizer=${model_path},trust_remote_code=True" \
         --include_path "${TASK_DIR}" \
         --tasks wikitext_local \
         --batch_size auto \
