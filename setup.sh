@@ -71,7 +71,7 @@ fix_yaml_path() {
 wait_for_serve() {
     info "Waiting for vllm serve to be ready on port ${SERVE_PORT} ..."
     for i in $(seq 1 120); do
-        if curl -s "http://localhost:${SERVE_PORT}/v1/models" > /dev/null 2>&1; then
+        if curl --noproxy '*' -s "http://localhost:${SERVE_PORT}/v1/models" > /dev/null 2>&1; then
             info "vllm serve is ready!"
             return 0
         fi
@@ -178,7 +178,7 @@ do_serve() {
     export VLLM_USE_V1="${VLLM_USE_V1:-0}"
 
     # 检测服务是否已在运行
-    if curl -s "http://localhost:${SERVE_PORT}/v1/models" > /dev/null 2>&1; then
+    if curl --noproxy '*' -s "http://localhost:${SERVE_PORT}/v1/models" > /dev/null 2>&1; then
         info "Service already running on port ${SERVE_PORT}, skipping launch"
         return 0
     fi
